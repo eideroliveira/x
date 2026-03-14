@@ -50,6 +50,10 @@ func (vh *ViewHelper) OAuthBeginURL() string {
 	return vh.b.oauthBeginURL
 }
 
+func (vh *ViewHelper) OAuthCallbackURL() string {
+	return vh.b.oauthCallbackURL
+}
+
 func (vh *ViewHelper) PasswordLoginURL() string {
 	return vh.b.passwordLoginURL
 }
