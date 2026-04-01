@@ -24,6 +24,34 @@ func ConnectableString(addr net.Addr) string {
 	default:
 		return addr.String()
 	}
+
+}
+
+// ConnectableAddr returns a new net.Addr with unspecified IPs (0.0.0.0, [::]) replaced
+// by the corresponding loopback address (127.0.0.1, [::1]).
+// Non-IP addresses (e.g. Unix sockets) are returned as-is.
+func ConnectableAddr(addr net.Addr) net.Addr {
+	switch a := addr.(type) {
+	case *net.TCPAddr:
+		if a.IP.IsUnspecified() {
+			v := *a
+			v.IP = LoopbackIP(v.IP)
+			return &v
+		}
+	case *net.UDPAddr:
+		if a.IP.IsUnspecified() {
+			v := *a
+			v.IP = LoopbackIP(v.IP)
+			return &v
+		}
+	case *net.IPAddr:
+		if a.IP.IsUnspecified() {
+			v := *a
+			v.IP = LoopbackIP(v.IP)
+			return &v
+		}
+	}
+	return addr
 }
 
 var (
@@ -40,6 +68,7 @@ func LoopbackIP(ip net.IP) net.IP {
 	}
 	return IPv6loopback
 }
+<<<<<<< HEAD
 
 func connectableTCPAddrString(addr *net.TCPAddr) string {
 	ip := addr.IP
@@ -88,3 +117,5 @@ func formatIP(ip net.IP, zone string) string {
 	}
 	return ipStr
 }
+=======
+>>>>>>> upstream/master
