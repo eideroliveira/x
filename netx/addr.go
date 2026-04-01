@@ -68,7 +68,6 @@ func LoopbackIP(ip net.IP) net.IP {
 	}
 	return IPv6loopback
 }
-<<<<<<< HEAD
 
 func connectableTCPAddrString(addr *net.TCPAddr) string {
 	ip := addr.IP
@@ -117,5 +116,3 @@ func formatIP(ip net.IP, zone string) string {
 	}
 	return ipStr
 }
-=======
->>>>>>> upstream/master
