@@ -42,9 +42,19 @@ const props = defineProps({
 const root = ref<HTMLElement | null>(null)
 let observer: IntersectionObserver | null = null
 let parallaxRafId: number | null = null
+let parallaxScheduled = false
 const animationTimeouts = new Map<Element, number>()
 
+// Previously handleParallax re-armed itself with requestAnimationFrame on
+// every frame, which meant 60 fps worth of querySelectorAll +
+// getBoundingClientRect + inline style writes for the life of the page.
+// Combined with any hover-triggered layout (Vuetify adjusting a card
+// elevation, the pagebuilder editor's overlay, etc.) the browser would
+// stall or crash on mouse over. Drive it off scroll instead: one rAF per
+// scroll event, coalesced so fast scrolls don't queue work.
 const handleParallax = () => {
+  parallaxRafId = null
+  parallaxScheduled = false
   if (!root.value) return
 
   const opposites = root.value.querySelectorAll('.v-timeline-item__opposite')
@@ -67,7 +77,11 @@ const handleParallax = () => {
 
   opposites.forEach((el) => applyParallax(el, 0.1))
   bodies.forEach((el) => applyParallax(el, -0.02))
+}
 
+const scheduleParallax = () => {
+  if (parallaxScheduled) return
+  parallaxScheduled = true
   parallaxRafId = requestAnimationFrame(handleParallax)
 }
 
@@ -124,14 +138,22 @@ onMounted(() => {
   }
 
   if (props.parallax) {
-    handleParallax()
+    // Initial paint + bind to scroll/resize. Passive listeners so we
+    // never block scrolling.
+    scheduleParallax()
+    window.addEventListener('scroll', scheduleParallax, { passive: true })
+    window.addEventListener('resize', scheduleParallax, { passive: true })
   }
 })
 
 onUnmounted(() => {
   observer?.disconnect()
-  if (parallaxRafId) {
+  if (parallaxRafId !== null) {
     cancelAnimationFrame(parallaxRafId)
+  }
+  if (props.parallax) {
+    window.removeEventListener('scroll', scheduleParallax)
+    window.removeEventListener('resize', scheduleParallax)
   }
   animationTimeouts.forEach((id) => clearTimeout(id))
   animationTimeouts.clear()
