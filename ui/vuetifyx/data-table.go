@@ -210,16 +210,22 @@ func (b *DataTableBuilder) MarshalHTML(c context.Context) (r []byte, err error) 
 			))
 		}
 
+		var tdLabels []string // track per-cell label
+		// ... append "" when adding the selection-checkbox <td> ...
 		for _, f := range b.columns {
 			tds = append(tds, f.cellComponentFunc(obj, f.name, ctx))
+			tdLabels = append(tdLabels, f.title) // <-- title for column
 		}
-
 		var bindTds []h.HTMLComponent
 		for _, td := range tds {
 			std, ok := td.(h.MutableAttrHTMLComponent)
 			if !ok {
 				bindTds = append(bindTds, td)
 				continue
+			}
+			// then in the bindTds loop:
+			if i < len(tdLabels) && tdLabels[i] != "" {
+				std.SetAttr("data-label", tdLabels[i])
 			}
 
 			var tdWrapped h.HTMLComponent = std
