@@ -198,6 +198,7 @@ func (b *DataTableBuilder) MarshalHTML(c context.Context) (r []byte, err error) 
 			).Class("pr-0").Style("width: 40px;"))
 		}
 
+		var tdLabels []string
 		if b.onSelectionChanged != "" {
 			tds = append(tds, h.Td().Class("pr-0").Children(
 				v.VCheckbox().
@@ -208,26 +209,24 @@ func (b *DataTableBuilder) MarshalHTML(c context.Context) (r []byte, err error) 
 					Attr("@click.native.stop", true).
 					Attr("v-model", "_dataTableLocals_.selectedIds"),
 			))
+			tdLabels = append(tdLabels, "") // keep alignment with tds
 		}
 
-		var tdLabels []string // track per-cell label
-		// ... append "" when adding the selection-checkbox <td> ...
 		for _, f := range b.columns {
 			tds = append(tds, f.cellComponentFunc(obj, f.name, ctx))
-			tdLabels = append(tdLabels, f.title) // <-- title for column
+			tdLabels = append(tdLabels, f.title)
 		}
+
 		var bindTds []h.HTMLComponent
-		for _, td := range tds {
+		for ci, td := range tds { // ci, not _, and not shadowing outer i
 			std, ok := td.(h.MutableAttrHTMLComponent)
 			if !ok {
 				bindTds = append(bindTds, td)
 				continue
 			}
-			// then in the bindTds loop:
-			if i < len(tdLabels) && tdLabels[i] != "" {
-				std.SetAttr("data-label", tdLabels[i])
+			if ci < len(tdLabels) && tdLabels[ci] != "" {
+				std.SetAttr("data-label", tdLabels[ci])
 			}
-
 			var tdWrapped h.HTMLComponent = std
 			if b.cellWrapper != nil {
 				tdWrapped = b.cellWrapper(std, id, obj, "")
