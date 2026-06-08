@@ -31,10 +31,11 @@ const updateModelValue = (val: any) => {
 </script>
 
 <template>
-  <div style="width: 525px">
+  <div style="min-width: 525px">
     <range-picker
       :visible="datePickerVisible"
       clearable
+      inline
       @update:model-value="updateModelValue"
       v-model="value"
       type="datetimepicker"

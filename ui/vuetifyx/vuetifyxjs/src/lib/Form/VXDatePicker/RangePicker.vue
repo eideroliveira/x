@@ -57,6 +57,7 @@
 
       <!-- drop down -->
       <v-overlay
+        v-if="!inline"
         :model-value="showMenu"
         persistent
         target="parent"
@@ -96,6 +97,30 @@
         </div>
       </v-overlay>
     </vx-field>
+
+    <!-- inline drop down: rendered in document flow so it never overlaps
+         surrounding content (e.g. a filter menu's Apply button) -->
+    <div v-if="inline" class="vx-date-picker-group vx-date-picker-group--inline mt-2">
+      <date-picker-base
+        class="d-inline-block overflow-hidden"
+        :model-value="datePickerValue[0]"
+        :format-str="formatStr"
+        :type="type"
+        @update:modelValue="onDatePickerValueChange($event, 0)"
+        :date-picker-props="datePickerProps[0]"
+        v-bind="filteredAttrs.datePickerProps?.[0]"
+      />
+
+      <date-picker-base
+        class="d-inline-block overflow-hidden"
+        :model-value="datePickerValue[1]"
+        :format-str="formatStr"
+        :type="type"
+        @update:modelValue="onDatePickerValueChange($event, 1)"
+        :date-picker-props="datePickerProps[1]"
+        v-bind="filteredAttrs.datePickerProps?.[1]"
+      />
+    </div>
   </div>
 </template>
 
@@ -135,6 +160,8 @@ const props = defineProps({
   required: Boolean,
   disabled: Boolean,
   needConfirm: Boolean,
+  // render the calendar in document flow instead of a floating overlay
+  inline: Boolean,
   placeholder: {
     type: [Array, String] as PropType<string[] | string>,
     default: ['', '']
@@ -517,6 +544,10 @@ function onClickConfirm() {
     .v-date-picker-month {
       padding-bottom: 4px;
     }
+  }
+
+  &--inline {
+    white-space: nowrap;
   }
 }
 
