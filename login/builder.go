@@ -95,6 +95,10 @@ type Builder struct {
 	homePageURLFunc HomeURLFunc
 	loginPageURL    string
 	LogoutURL       string
+	// logoutRedirectURLFunc, when set, decides where a user lands after
+	// logout. Nil (the default) preserves the original behavior of
+	// redirecting to loginPageURL.
+	logoutRedirectURLFunc HomeURLFunc
 
 	// TOTP URLs
 	validateTOTPURL     string
@@ -288,6 +292,13 @@ func (b *Builder) ContinueUrlCookieName(v string) *Builder {
 
 func (b *Builder) HomeURLFunc(v HomeURLFunc) (r *Builder) {
 	b.homePageURLFunc = v
+	return b
+}
+
+// LogoutRedirectURLFunc sets where users are redirected after logout.
+// When unset, logout redirects to the login page (the default behavior).
+func (b *Builder) LogoutRedirectURLFunc(v HomeURLFunc) (r *Builder) {
+	b.logoutRedirectURLFunc = v
 	return b
 }
 
@@ -1411,20 +1422,26 @@ func (b *Builder) logout(w http.ResponseWriter, r *http.Request) {
 		//
 	}
 
+	user := GetCurrentUser(r)
+
 	b.cleanAuthCookies(w)
 
+	redirectURL := b.loginPageURL
+	if b.logoutRedirectURLFunc != nil {
+		redirectURL = b.logoutRedirectURLFunc(r, user)
+	}
+
 	if b.afterLogoutHook != nil {
-		user := GetCurrentUser(r)
 		if user != nil {
 			if herr := b.wrapHook(b.afterLogoutHook)(r, user); herr != nil {
 				setNoticeOrPanic(w, herr)
-				http.Redirect(w, r, b.loginPageURL, http.StatusFound)
+				http.Redirect(w, r, redirectURL, http.StatusFound)
 				return
 			}
 		}
 	}
 
-	http.Redirect(w, r, b.loginPageURL, http.StatusFound)
+	http.Redirect(w, r, redirectURL, http.StatusFound)
 }
 
 // beginAuth is for url "/auth/{provider}"
