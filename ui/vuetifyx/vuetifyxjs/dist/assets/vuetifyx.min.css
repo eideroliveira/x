@@ -57451,69 +57451,42 @@ a {
 }
 .vx-time-select-wrap .time-select[data-v-7b1ba3be] input {
   display: none;
-}.v-picker-wrap[data-v-89fca598] {
+}.v-picker-wrap[data-v-c017cce3] {
   padding: 8px 0;
   width: 292px;
 }
-.v-picker-wrap[data-v-89fca598] .v-date-picker-years, .v-picker-wrap[data-v-89fca598] .v-date-picker-months {
+.v-picker-wrap[data-v-c017cce3] .v-date-picker-years, .v-picker-wrap[data-v-c017cce3] .v-date-picker-months {
   height: 256px;
 }
-.v-picker-wrap[data-v-89fca598] .v-date-picker-month__days {
+.v-picker-wrap[data-v-c017cce3] .v-date-picker-month__days {
   flex: initial;
   column-gap: 2px;
 }
-.v-picker-wrap[data-v-89fca598] .v-date-picker-month__days .v-btn.v-btn--variant-outlined {
+.v-picker-wrap[data-v-c017cce3] .v-date-picker-month__days .v-btn.v-btn--variant-outlined {
   color: rgb(var(--v-theme-primary));
 }
-.v-picker-wrap[data-v-89fca598] .v-date-picker-month__days .v-date-picker-month__day {
+.v-picker-wrap[data-v-c017cce3] .v-date-picker-month__days .v-date-picker-month__day {
   width: 36px;
   height: 36px;
 }
-.v-picker-wrap[data-v-89fca598] .v-date-picker-month__days .v-btn.v-date-picker-month__day-btn {
+.v-picker-wrap[data-v-c017cce3] .v-date-picker-month__days .v-btn.v-date-picker-month__day-btn {
   --v-btn-size: 14px;
   --v-btn-height: 20px;
 }
-.v-picker-wrap[data-v-89fca598] .v-date-picker-month__days .v-date-picker-month__weekday {
+.v-picker-wrap[data-v-c017cce3] .v-date-picker-month__days .v-date-picker-month__weekday {
   color: rgb(var(--v-theme-grey-darken-1));
 }
-.v-picker-wrap[data-v-89fca598] .v-date-picker-month__days .v-date-picker-month__day--selected .v-btn {
+.v-picker-wrap[data-v-c017cce3] .v-date-picker-month__days .v-date-picker-month__day--selected .v-btn {
   background-color: rgb(var(--v-theme-primary));
 }
-.v-picker-wrap[data-v-89fca598] .v-date-picker-controls {
-  display: block;
-  position: relative;
-  padding-inline-start: 15px;
-  padding-inline-end: 15px;
+.v-picker-wrap[data-v-c017cce3] .v-date-picker-controls {
   padding-bottom: 20px;
 }
-.v-picker-wrap[data-v-89fca598] .v-date-picker-controls .v-date-picker-controls__month-btn {
-  position: absolute;
-  left: 50%;
-  margin-left: -10px;
-  transform: translateX(-50%);
-  top: 2px;
-}
-.v-picker-wrap[data-v-89fca598] .v-date-picker-controls .v-date-picker-controls__month-btn .v-btn__content {
-  color: rgb(var(--v-theme-on-surface));
-}
-.v-picker-wrap[data-v-89fca598] .v-date-picker-controls .v-date-picker-controls__mode-btn {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  margin-left: 65.5px;
-  top: 2px;
-}
-.v-picker-wrap[data-v-89fca598] .v-date-picker-controls .v-date-picker-controls__month {
-  display: flex;
-  width: 100%;
-}
-.v-picker-wrap[data-v-89fca598] .v-date-picker-controls .v-date-picker-controls__month .v-btn {
+.v-picker-wrap[data-v-c017cce3] .v-date-picker-controls .v-date-picker-controls__month .v-btn,
+.v-picker-wrap[data-v-c017cce3] .v-date-picker-controls .v-date-picker-controls__year .v-btn {
   --v-btn-height: 20px;
 }
-.v-picker-wrap[data-v-89fca598] .v-date-picker-controls .v-date-picker-controls__month > :nth-child(2) {
-  margin-left: auto;
-}
-.time-select-wrap[data-v-89fca598] {
+.time-select-wrap[data-v-c017cce3] {
   justify-content: center;
   width: 292px;
 }.vx-range-picker-field .current[data-v-b6f7cc17] >  .v-input:not(.v-input--error) .v-field::after {
