@@ -1,6 +1,7 @@
 package login
 
 import (
+	"crypto/subtle"
 	"encoding/base64"
 	"fmt"
 	"time"
@@ -206,6 +207,26 @@ func (up *UserPass) GetResetPasswordToken() (token string, createdAt *time.Time,
 		return "", nil, true
 	}
 	return up.ResetPasswordToken, up.ResetPasswordTokenCreatedAt, false
+}
+
+// ResetPasswordTokenMatches reports, in constant time, whether the token a
+// reset-password request carries is the one stored for the user.
+//
+// A plain != returns at the first differing byte, so it takes longer the more
+// leading bytes match, and that is an oracle for the token one byte at a time.
+//
+// An empty stored token never matches. A user who never asked for a reset has
+// no token, and "" == "" would accept a request that sends none. The handlers
+// refuse an empty submitted token before they get here; this is the backstop.
+//
+// The length is not hidden: subtle.ConstantTimeCompare returns at once on a
+// length mismatch. Every token GenerateResetPasswordToken issues has the same
+// length, so it tells an attacker nothing.
+func ResetPasswordTokenMatches(submitted, stored string) bool {
+	if stored == "" {
+		return false
+	}
+	return subtle.ConstantTimeCompare([]byte(submitted), []byte(stored)) == 1
 }
 
 func (up *UserPass) SetPassword(db *gorm.DB, model interface{}, password string) error {

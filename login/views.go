@@ -288,7 +288,7 @@ func defaultResetPasswordPage(vh *ViewHelper) web.PageFunc {
 				r.Body = Div(Text("token expired"))
 				return r, nil
 			}
-			if token != storedToken {
+			if !ResetPasswordTokenMatches(token, storedToken) {
 				r.Body = Div(Text("invalid token"))
 				return r, nil
 			}

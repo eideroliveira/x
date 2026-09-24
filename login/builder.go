@@ -1617,7 +1617,7 @@ func (b *Builder) doResetPassword(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, failRedirectURL, http.StatusFound)
 		return
 	}
-	if token != storedToken {
+	if !ResetPasswordTokenMatches(token, storedToken) {
 		SetFailCodeFlash(w, FailCodeInvalidToken)
 		http.Redirect(w, r, failRedirectURL, http.StatusFound)
 		return
