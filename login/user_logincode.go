@@ -1,6 +1,7 @@
 package login
 
 import (
+	"crypto/subtle"
 	"fmt"
 	"net/http"
 	"reflect"
@@ -66,7 +67,6 @@ func (up *UserLoginCode) GenerateLoginCode(db *gorm.DB, model interface{}) (code
 
 	createdAt, expiredAt := iface.GenerateLoginCodeExpiration(db)
 
-
 	pk, pv := getModelPrimaryKey(db, model)
 
 	result := db.Model(model).
@@ -107,11 +107,35 @@ func (up *UserLoginCode) ConsumeLoginCode(db *gorm.DB, model interface{}) error 
 	return nil
 }
 
+// GetLoginCode returns the user's outstanding login code, or reports that it
+// expired. It returns "" when the user has no code, and a code with no expiry
+// counts as none: GenerateLoginCode always sets one, so a user who never asked
+// for a code has LoginCode "" and LoginCodeExpiredAt nil, and any other value
+// without an expiry was not issued here and would never expire.
 func (up *UserLoginCode) GetLoginCode() (token string, createdAt *time.Time, expired bool) {
-	if up.LoginCodeExpiredAt != nil && time.Since(*up.LoginCodeExpiredAt) > 0 {
+	if up.LoginCodeExpiredAt == nil {
+		return "", nil, false
+	}
+	if time.Since(*up.LoginCodeExpiredAt) > 0 {
 		return "", nil, true
 	}
 	return up.LoginCode, up.LoginCreatedAt, false
+}
+
+// LoginCodeMatches reports, in constant time, whether the code a login request
+// carries is the one stored for the user.
+//
+// An empty stored code never matches: that is a user with no code outstanding,
+// and "" == "" must not log anyone in.
+//
+// The length is not hidden: subtle.ConstantTimeCompare returns at once on a
+// length mismatch. Every code GenerateLoginCode issues has six digits, so it
+// tells an attacker nothing.
+func LoginCodeMatches(submitted, stored string) bool {
+	if stored == "" {
+		return false
+	}
+	return subtle.ConstantTimeCompare([]byte(submitted), []byte(stored)) == 1
 }
 
 func (up *UserLoginCode) SetConfirmTime(db *gorm.DB, model interface{}) error {

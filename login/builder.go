@@ -914,8 +914,9 @@ func (b *Builder) AuthUserLoginCode(account string, code string) (user interface
 		return user, ErrLoginCodeExpired
 	}
 
-	// Empty code means user need a login code, not to verify it.
-	if ltoken != code && ltoken != "" {
+	// A user with no code outstanding fails like a wrong code, and counts
+	// towards the lock the same way.
+	if !LoginCodeMatches(code, ltoken) {
 		if b.maxRetryCount > 0 {
 			if err = up.IncreaseRetryCount(b.db, b.newUserObject()); err != nil {
 				return user, err
@@ -1093,6 +1094,8 @@ func (b *Builder) loginCodeDo(w http.ResponseWriter, r *http.Request) {
 		switch err {
 		case ErrInvalidLoginCode:
 			code = FailCodeInvalidLoginCode
+		case ErrLoginCodeExpired:
+			code = FailCodeLoginTokenExpired
 		case ErrUserNotFound:
 			code = FailCodeIncorrectAccountNameOrPassword
 		case ErrUserLocked, ErrUserGetLocked:
