@@ -157,6 +157,7 @@ type Builder struct {
 	tUser                reflect.Type
 	userPassEnabled      bool
 	loginCodeEnabled     bool
+	loginCodeSendEnabled bool // the user model is a UserLoginCodeSender; no send route without it
 	oauthEnabled         bool
 	sessionSecureEnabled bool
 	// key is provider
@@ -716,6 +717,9 @@ func (b *Builder) UserModel(m interface{}) (r *Builder) {
 	if _, ok := m.(UserLoginCoder); ok {
 		b.loginCodeEnabled = true
 	}
+	if _, ok := m.(UserLoginCodeSender); ok {
+		b.loginCodeSendEnabled = true
+	}
 	if _, ok := m.(OAuthUser); ok {
 		b.oauthEnabled = true
 	}
@@ -995,6 +999,15 @@ func (b *Builder) sendUserCodeLogin(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	// MountAPI does not mount this route for a user model that cannot send a
+	// code; refuse here too, before the account is looked up or touched.
+	// Generating first would replace the code the user is waiting for with
+	// one nobody can deliver.
+	if !b.loginCodeSendEnabled {
+		w.WriteHeader(http.StatusNotFound)
+		return
+	}
+
 	var err error
 	var user interface{}
 	failRedirectURL := b.LogoutURL
@@ -1041,6 +1054,14 @@ func (b *Builder) sendUserCodeLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	sender, ok := user.(UserLoginCodeSender)
+	if !ok {
+		log.Printf("user does not implement UserLoginCodeSender: %T", user)
+		SetFailCodeFlash(w, FailCodeSystemError)
+		http.Redirect(w, r, b.loginPageURL, http.StatusFound)
+		return
+	}
+
 	// send login code to user
 	loginCode, err := uc.GenerateLoginCode(b.db, user)
 	if err != nil {
@@ -1048,7 +1069,7 @@ func (b *Builder) sendUserCodeLogin(w http.ResponseWriter, r *http.Request) {
 		SetFailCodeFlash(w, FailCodeSystemError)
 		return
 	}
-	err = user.(UserLoginCodeSender).SendLoginCode(r, account, loginCode)
+	err = sender.SendLoginCode(r, account, loginCode)
 	if err != nil {
 		log.Printf("failed to send login code: %v", err)
 		SetFailCodeFlash(w, FailCodeSystemError)
@@ -1966,7 +1987,9 @@ func (b *Builder) MountAPI(mux *http.ServeMux) {
 	}
 	if b.loginCodeEnabled {
 		mux.HandleFunc(b.validateLoginCodeURL, b.loginCodeDo)
-		mux.HandleFunc(b.sendLoginCodeURL, b.sendUserCodeLogin)
+		if b.loginCodeSendEnabled {
+			mux.HandleFunc(b.sendLoginCodeURL, b.sendUserCodeLogin)
+		}
 	}
 	if b.oauthEnabled {
 		mux.HandleFunc(b.oauthBeginURL, b.beginAuth)
