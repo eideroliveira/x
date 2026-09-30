@@ -866,6 +866,7 @@ func (b *Builder) completeUserAuthCallbackComplete(w http.ResponseWriter, r *htt
 		Name:             ouser.Name,
 		UserID:           userID,
 		AvatarURL:        ouser.AvatarURL,
+		AuthenticatedAt:  time.Now().Unix(),
 		RegisteredClaims: b.genBaseSessionClaim(userID),
 	}
 	if user == nil {
@@ -1136,6 +1137,7 @@ func (b *Builder) loginCodeDo(w http.ResponseWriter, r *http.Request) {
 	claims := UserClaims{
 		UserID:             userID,
 		LoginCodeValidated: true,
+		AuthenticatedAt:    time.Now().Unix(),
 		RegisteredClaims:   b.genBaseSessionClaim(userID),
 	}
 
@@ -1225,6 +1227,7 @@ func (b *Builder) userpassLogin(w http.ResponseWriter, r *http.Request) {
 	claims := UserClaims{
 		UserID:           userID,
 		PassUpdatedAt:    u.GetPasswordUpdatedAt(),
+		AuthenticatedAt:  time.Now().Unix(),
 		RegisteredClaims: b.genBaseSessionClaim(userID),
 	}
 
@@ -1905,6 +1908,41 @@ func (b *Builder) totpDo(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, redirectURL, http.StatusFound)
 }
 
+// CompletePasskeyLogin opens a session for user, whom the caller has already
+// authenticated with a passkey (WebAuthn), which this builder does not verify
+// itself. It refuses a locked account with ErrUserLocked, runs the
+// AfterLogin hook (which a SessionBuilder uses to record the session), sets
+// the auth cookies, and returns where the browser should go next: the
+// continue URL when one is set, else the home URL. The caller answers the
+// request: a passkey ceremony finishes from script, so it sends the URL back
+// rather than redirecting.
+func (b *Builder) CompletePasskeyLogin(w http.ResponseWriter, r *http.Request, user interface{}) (redirectURL string, err error) {
+	if user.(UserPasser).GetLocked() {
+		return "", ErrUserLocked
+	}
+	userID := objectID(user)
+	claims := UserClaims{
+		UserID:           userID,
+		PasskeyValidated: true,
+		AuthenticatedAt:  time.Now().Unix(),
+		RegisteredClaims: b.genBaseSessionClaim(userID),
+	}
+	if b.afterLoginHook != nil {
+		setCookieForRequest(r, &http.Cookie{Name: b.authCookieName, Value: b.mustGetSessionToken(claims)})
+		if err = b.wrapHook(b.afterLoginHook)(r, user); err != nil {
+			return "", err
+		}
+	}
+	if err = b.setSecureCookiesByClaims(w, user, claims); err != nil {
+		return "", err
+	}
+	redirectURL = b.homePageURLFunc(r, user)
+	if v := b.getContinueURL(w, r); v != "" {
+		redirectURL = v
+	}
+	return redirectURL, nil
+}
+
 func (b *Builder) LoginCodeLogin(account string, code string) (token string, err error) {
 	user, err := b.AuthUserLoginCode(account, code)
 	if err != nil {
@@ -1915,6 +1953,7 @@ func (b *Builder) LoginCodeLogin(account string, code string) (token string, err
 	claims := UserClaims{
 		UserID:             userID,
 		LoginCodeValidated: true,
+		AuthenticatedAt:    time.Now().Unix(),
 		RegisteredClaims:   b.genBaseSessionClaim(userID),
 	}
 

@@ -16,16 +16,26 @@ var (
 )
 
 type UserClaims struct {
-	Provider                string
-	Email                   string
-	Name                    string
-	UserID                  string
-	AvatarURL               string
-	Location                string
-	IDToken                 string
-	PassUpdatedAt           string
-	TOTPValidated           bool
-	LoginCodeValidated      bool
+	Provider           string
+	Email              string
+	Name               string
+	UserID             string
+	AvatarURL          string
+	Location           string
+	IDToken            string
+	PassUpdatedAt      string
+	TOTPValidated      bool
+	LoginCodeValidated bool
+	// PasskeyValidated marks a session opened with a passkey
+	// (CompletePasskeyLogin). Like a login-code session, it answers to the
+	// account's lock and not to its password.
+	PasskeyValidated bool
+	// AuthenticatedAt is when the login that opened this session happened, in
+	// Unix seconds. Unlike IssuedAt it survives AutoExtendSession, which
+	// re-issues the token and keeps every other claim, so it is what a
+	// "signed in recently" check reads. Zero on a session from before the
+	// field existed.
+	AuthenticatedAt int64
 	jwt.RegisteredClaims
 }
 
