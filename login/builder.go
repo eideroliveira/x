@@ -39,6 +39,12 @@ var (
 	ErrInvalidLoginCode     = errors.New("invalid login code")
 	ErrLoginCodeExpired     = errors.New("login code has expired")
 	ErrAccountNumberInvalid = errors.New("account number is invalid")
+	// ErrAccountAmbiguous is what a user model's FindUser returns when the
+	// login it was given matches more than one account (the same e-mail in
+	// two spellings, say). Every login path refuses it with
+	// FailCodeAccountAmbiguous: picking one would sign in, or send a reset
+	// link for, an account the person typing may not own.
+	ErrAccountAmbiguous = errors.New("more than one account matches this login")
 )
 
 type (
@@ -1034,6 +1040,8 @@ func (b *Builder) sendUserCodeLogin(w http.ResponseWriter, r *http.Request) {
 			SetFailCodeFlash(w, FailCodeUserNotFound)
 		case ErrAccountNumberInvalid:
 			SetFailCodeFlash(w, FailCodeAccountNumberInvalid)
+		case ErrAccountAmbiguous:
+			SetFailCodeFlash(w, FailCodeAccountAmbiguous)
 		default:
 			log.Printf("failed to find user by phone number: %v", err)
 			SetFailCodeFlash(w, FailCodeSystemError)
@@ -1122,6 +1130,8 @@ func (b *Builder) loginCodeDo(w http.ResponseWriter, r *http.Request) {
 			code = FailCodeIncorrectAccountNameOrPassword
 		case ErrUserLocked, ErrUserGetLocked:
 			code = FailCodeUserLocked
+		case ErrAccountAmbiguous:
+			code = FailCodeAccountAmbiguous
 		default:
 			panic(err)
 		}
@@ -1211,6 +1221,8 @@ func (b *Builder) userpassLogin(w http.ResponseWriter, r *http.Request) {
 			code = FailCodeIncorrectAccountNameOrPassword
 		case ErrUserLocked, ErrUserGetLocked:
 			code = FailCodeUserLocked
+		case ErrAccountAmbiguous:
+			code = FailCodeAccountAmbiguous
 		default:
 			panic(err)
 		}
@@ -1512,6 +1524,11 @@ func (b *Builder) sendResetPasswordLink(w http.ResponseWriter, r *http.Request) 
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			http.Redirect(w, r, fmt.Sprintf("%s?a=%s", b.resetPasswordLinkSentPageURL, account), http.StatusFound)
+			return
+		}
+		if errors.Is(err, ErrAccountAmbiguous) {
+			SetFailCodeFlash(w, FailCodeAccountAmbiguous)
+			http.Redirect(w, r, failRedirectURL, http.StatusFound)
 			return
 		}
 		panic(err)

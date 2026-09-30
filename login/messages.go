@@ -70,6 +70,7 @@ type Messages struct {
 	ErrorUserLocked                     string
 	ErrorAccountIsRequired              string
 	ErrorAccountNumberInvalid           string
+	ErrorAccountAmbiguous               string
 	ErrorPasswordCannotBeEmpty          string
 	ErrorPasswordNotMatch               string
 	ErrorIncorrectPassword              string
@@ -146,6 +147,7 @@ var Messages_en_US = &Messages{
 	ErrorUserLocked:                     "User Locked",
 	ErrorAccountIsRequired:              "Email is required",
 	ErrorAccountNumberInvalid:           "Account number is invalid",
+	ErrorAccountAmbiguous:               "More than one account uses this email. Please contact support.",
 	ErrorPasswordCannotBeEmpty:          "Password cannot be empty",
 	ErrorPasswordNotMatch:               "The new passwords do not match. Please try again.",
 	ErrorIncorrectPassword:              "Unable to change password. Please check your inputs and try again.",
@@ -219,6 +221,7 @@ var Messages_zh_CN = &Messages{
 	ErrorIncorrectAccountNameOrPassword: "邮箱或密码错误",
 	ErrorUserLocked:                     "用户已锁定",
 	ErrorAccountIsRequired:              "邮箱是必须的",
+	ErrorAccountAmbiguous:               "有多个账户使用此邮箱，请联系客服。",
 	ErrorPasswordCannotBeEmpty:          "密码不能为空",
 	ErrorPasswordNotMatch:               "新密码不匹配，请重试",
 	ErrorIncorrectPassword:              "无法更改密码，请检查您的输入并重试",
@@ -292,6 +295,7 @@ var Messages_ja_JP = &Messages{
 	ErrorIncorrectAccountNameOrPassword: "メールアドレスまたはパスワードが間違っています",
 	ErrorUserLocked:                     "ユーザーがロックされました",
 	ErrorAccountIsRequired:              "メールアドレスは必須です",
+	ErrorAccountAmbiguous:               "このメールアドレスを使用しているアカウントが複数あります。サポートにお問い合わせください。",
 	ErrorPasswordCannotBeEmpty:          "パスワードは必須です",
 	ErrorPasswordNotMatch:               "新しいパスワードが一致しません。もう一度お試しください",
 	ErrorIncorrectPassword:              "パスワードの変更に失敗しました。入力内容を確認して再度お試しください",

@@ -47,6 +47,7 @@ const (
 	FailCodeIncorrectRecaptchaToken
 	FailCodeLoginTokenExpired
 	FailCodeAccountNumberInvalid
+	FailCodeAccountAmbiguous
 )
 
 type WarnCode int

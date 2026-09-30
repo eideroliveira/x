@@ -302,6 +302,8 @@ func (vh *ViewHelper) GetFailFlashMessage(msgr *Messages, w http.ResponseWriter,
 		return msgr.ErrorIncorrectRecaptchaToken
 	case FailCodeAccountNumberInvalid:
 		return msgr.ErrorAccountNumberInvalid
+	case FailCodeAccountAmbiguous:
+		return msgr.ErrorAccountAmbiguous
 	case FailCodeInvalidLoginCode:
 		return msgr.ErrorInvalidLoginCode
 	case FailCodeLoginTokenExpired:
