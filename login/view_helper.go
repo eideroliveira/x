@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/qor5/x/v3/i18n"
 )
@@ -156,19 +155,9 @@ func (vh *ViewHelper) GetNoticeFlash(w http.ResponseWriter, r *http.Request) *No
 	if err != nil {
 		return nil
 	}
-	var level NoticeLevel
-	var message string
-	{
-		vs := strings.SplitN(c.Value, "#", 2)
-		if len(vs) != 2 {
-			return nil
-		}
-		n, err := strconv.Atoi(vs[0])
-		if err != nil {
-			return nil
-		}
-		level = NoticeLevel(n)
-		message = vs[1]
+	ne := decodeNoticeFlash(c.Value)
+	if ne == nil {
+		return nil
 	}
 	http.SetCookie(w, &http.Cookie{
 		Name:     noticeFlashCookieName,
@@ -176,10 +165,7 @@ func (vh *ViewHelper) GetNoticeFlash(w http.ResponseWriter, r *http.Request) *No
 		MaxAge:   -1,
 		HttpOnly: true,
 	})
-	return &NoticeError{
-		Level:   level,
-		Message: message,
-	}
+	return ne
 }
 
 func (vh *ViewHelper) GetWrongLoginInputFlash(w http.ResponseWriter, r *http.Request) WrongLoginInputFlash {

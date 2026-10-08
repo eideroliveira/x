@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
+	"strings"
 
 	"github.com/pkg/errors"
 )
@@ -98,13 +100,54 @@ func setInfoCodeFlash(w http.ResponseWriter, c InfoCode) {
 
 const noticeFlashCookieName = "qor5_notice_flash"
 
+// The notice flash cookie carries "<level>~<base64url(message)>". A cookie
+// value may hold only the bytes 0x20-0x7e, and net/http drops every other
+// byte with a log line, so the message is encoded: written raw, every
+// accented letter of a Portuguese notice was lost ("Conta já existe" arrived
+// as "Conta j existe").
+const (
+	noticeFlashEncodedSep = "~"
+	// noticeFlashLegacySep is the separator of the raw "<level>#<message>"
+	// format written before the message was encoded. A cookie set by the
+	// previous release is still read, during the deploy that replaces it.
+	// TODO: drop it once no release writes the raw format.
+	noticeFlashLegacySep = "#"
+)
+
+func encodeNoticeFlash(ne *NoticeError) string {
+	return fmt.Sprintf("%d%s%s", ne.Level, noticeFlashEncodedSep,
+		base64.RawURLEncoding.EncodeToString([]byte(ne.Message)))
+}
+
+// decodeNoticeFlash reads a notice flash cookie value, encoded or legacy. It
+// returns nil for a value in neither form.
+func decodeNoticeFlash(v string) *NoticeError {
+	i := strings.IndexAny(v, noticeFlashEncodedSep+noticeFlashLegacySep)
+	if i < 0 {
+		return nil
+	}
+	n, err := strconv.Atoi(v[:i])
+	if err != nil {
+		return nil
+	}
+	message := v[i+1:]
+	if v[i:i+1] == noticeFlashEncodedSep {
+		b, err := base64.RawURLEncoding.DecodeString(message)
+		if err != nil {
+			return nil
+		}
+		message = string(b)
+	}
+	return &NoticeError{Level: NoticeLevel(n), Message: message}
+}
+
 func SetNoticeFlash(w http.ResponseWriter, ne *NoticeError) {
 	if ne == nil {
 		return
 	}
 	http.SetCookie(w, &http.Cookie{
 		Name:     noticeFlashCookieName,
-		Value:    fmt.Sprintf("%d#%s", ne.Level, ne.Message),
+		Value:    encodeNoticeFlash(ne),
 		Path:     "/",
 		HttpOnly: true,
 	})
