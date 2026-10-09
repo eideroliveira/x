@@ -109,7 +109,7 @@ func (b *Builder) Middleware(cfgs ...MiddlewareConfig) func(next http.Handler) h
 				var err error
 				user, err = b.findUserByID(claims.UserID)
 				if err == nil {
-					if claims.LoginCodeValidated || claims.PasskeyValidated {
+					if claims.LoginCodeValidated || claims.PasskeyValidated || claims.VerifiedLogin != "" {
 						if user.(UserPasser).GetLocked() {
 							err = ErrUserLocked
 						}

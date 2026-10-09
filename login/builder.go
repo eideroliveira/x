@@ -1925,22 +1925,40 @@ func (b *Builder) totpDo(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, redirectURL, http.StatusFound)
 }
 
+// LoginMethodPasskey is the VerifiedLogin of a session opened with a
+// passkey.
+const LoginMethodPasskey = "passkey"
+
 // CompletePasskeyLogin opens a session for user, whom the caller has already
 // authenticated with a passkey (WebAuthn), which this builder does not verify
-// itself. It refuses a locked account with ErrUserLocked, runs the
-// AfterLogin hook (which a SessionBuilder uses to record the session), sets
-// the auth cookies, and returns where the browser should go next: the
-// continue URL when one is set, else the home URL. The caller answers the
-// request: a passkey ceremony finishes from script, so it sends the URL back
-// rather than redirecting.
+// itself: CompleteVerifiedLogin with LoginMethodPasskey. The session also
+// carries PasskeyValidated, which readers from before VerifiedLogin check.
 func (b *Builder) CompletePasskeyLogin(w http.ResponseWriter, r *http.Request, user interface{}) (redirectURL string, err error) {
+	return b.CompleteVerifiedLogin(w, r, user, LoginMethodPasskey)
+}
+
+// CompleteVerifiedLogin opens a session for user, whom the caller has already
+// authenticated by method (a passkey, an identity provider the caller
+// resolved to this account itself), which this builder does not verify. The
+// session records method in VerifiedLogin and, like a passkey's, answers to
+// the account's lock and not to its password. It refuses a locked account
+// with ErrUserLocked and an empty method, runs the AfterLogin hook (which a
+// SessionBuilder uses to record the session), sets the auth cookies, and
+// returns where the browser should go next: the continue URL when one is set,
+// else the home URL. The caller answers the request (a passkey ceremony
+// finishes from script and sends the URL back; a redirect flow redirects).
+func (b *Builder) CompleteVerifiedLogin(w http.ResponseWriter, r *http.Request, user interface{}, method string) (redirectURL string, err error) {
+	if method == "" {
+		return "", errors.New("login: a verified login needs its method")
+	}
 	if user.(UserPasser).GetLocked() {
 		return "", ErrUserLocked
 	}
 	userID := objectID(user)
 	claims := UserClaims{
 		UserID:           userID,
-		PasskeyValidated: true,
+		PasskeyValidated: method == LoginMethodPasskey,
+		VerifiedLogin:    method,
 		AuthenticatedAt:  time.Now().Unix(),
 		RegisteredClaims: b.genBaseSessionClaim(userID),
 	}

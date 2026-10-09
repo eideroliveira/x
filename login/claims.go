@@ -30,6 +30,12 @@ type UserClaims struct {
 	// (CompletePasskeyLogin). Like a login-code session, it answers to the
 	// account's lock and not to its password.
 	PasskeyValidated bool
+	// VerifiedLogin names how the caller verified a session opened by
+	// CompleteVerifiedLogin ("passkey", "github", …), so a reader can tell
+	// one way in from another. Like PasskeyValidated, such a session answers
+	// to the account's lock and not to its password. Empty on any other
+	// session, and on a passkey session from before the field existed.
+	VerifiedLogin string
 	// AuthenticatedAt is when the login that opened this session happened, in
 	// Unix seconds. Unlike IssuedAt it survives AutoExtendSession, which
 	// re-issues the token and keeps every other claim, so it is what a
