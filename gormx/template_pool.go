@@ -285,6 +285,13 @@ func (p *TemplatePool) start() {
 		p.startErr = errors.Wrap(err, "failed to connect to the admin database")
 		return
 	}
+	// The admin session issues a CREATE and a DROP DATABASE per test, and a
+	// tracing span for each printed two log lines per test into the output of
+	// every test binary using the pool, around the lines that test wrote. A
+	// failure is reported through the test (t.Fatalf, t.Errorf) all the same.
+	// Session makes the handle a fresh starting point for each statement, so
+	// forks made in parallel do not share one.
+	p.admin = p.admin.Set(keyTracingDisabled, true).Session(&gorm.Session{})
 	if err := p.admin.WithContext(ctx).Exec(`CREATE DATABASE ` + p.template).Error; err != nil {
 		p.startErr = errors.Wrap(err, "failed to create the template database")
 		return
