@@ -56,12 +56,12 @@ const initVideo = () => {
     hls = null
   }
 
-  // 1. Check if browser supports HLS natively (Safari)
-  if (video.canPlayType('application/vnd.apple.mpegurl')) {
-    video.src = props.src
-  }
-  // 2. If not, use Hls.js library (Chrome, Firefox, etc.)
-  else if (Hls.isSupported()) {
+  // 1. Use Hls.js wherever Media Source Extensions exist (Chrome, Firefox,
+  //    desktop Safari). Desktop Chrome answers canPlayType for HLS too, but its
+  //    own player refuses segments that open with an AAC frame just before
+  //    zero, as ffmpeg's HLS muxer writes them ("Parsed buffers not in DTS
+  //    sequence"); Hls.js plays them.
+  if (window.MediaSource && Hls.isSupported()) {
     hls = new Hls({
       xhrSetup: function (xhr, url) {
         xhr.withCredentials = true // Crucial: Sends cookies with the request
@@ -69,6 +69,10 @@ const initVideo = () => {
     })
     hls.loadSource(props.src)
     hls.attachMedia(video)
+  }
+  // 2. Without MSE (the iPhone's Safari), play HLS natively
+  else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+    video.src = props.src
   }
 }
 

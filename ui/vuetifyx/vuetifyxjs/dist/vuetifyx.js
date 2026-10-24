@@ -223977,9 +223977,7 @@ Schedule: ${scheduleItems.map((seg) => segmentToString(seg))} pos: ${this.timeli
           hls.destroy();
           hls = null;
         }
-        if (video.canPlayType("application/vnd.apple.mpegurl")) {
-          video.src = props.src;
-        } else if (Hls.isSupported()) {
+        if (window.MediaSource && Hls.isSupported()) {
           hls = new Hls({
             xhrSetup: function(xhr, url) {
               xhr.withCredentials = true;
@@ -223987,6 +223985,8 @@ Schedule: ${scheduleItems.map((seg) => segmentToString(seg))} pos: ${this.timeli
           });
           hls.loadSource(props.src);
           hls.attachMedia(video);
+        } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
+          video.src = props.src;
         }
       };
       require$$0.onMounted(() => {
@@ -224060,7 +224060,7 @@ Schedule: ${scheduleItems.map((seg) => segmentToString(seg))} pos: ${this.timeli
       };
     }
   });
-  const VXVideo = /* @__PURE__ */ _export_sfc(_sfc_main, [["__scopeId", "data-v-77d2ccf9"]]);
+  const VXVideo = /* @__PURE__ */ _export_sfc(_sfc_main, [["__scopeId", "data-v-779255e6"]]);
   const vuetifyx = {
     install: (app) => {
       app.component("vx-chart", VXChart);
